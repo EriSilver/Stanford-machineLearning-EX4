@@ -62,25 +62,57 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+% _____ h(theta)_______
+a1 = [ones(size(X, 1), 1), X];
 
+z2 = a1 * Theta1';
+a2 = [ones(size(z2, 1), 1), sigmoid(z2)];
 
+z3 = a2 * Theta2';
 
+a3 = sigmoid(z3);
+h = a3;
 
+yVectors = yDigitsToVectors(y, size(h,2));
+% hVectors = yDigitsToVectors(h, size(h,2), 1);
 
+% __________ J before Reg._________________
+y1 = -1 * yVectors .* log(h);
+y0 = (1 - yVectors) .* log(1 - h);
+ySum = y1 - y0;
+J = 1 / m * sum(sum(ySum'));
 
+% ___________ Reg. J _______________________
+function s = sumTheta(theta),
+    s = sum(sum(theta(:, [2:end])' .^ 2));
+end;
+reg = lambda / (2 * m) * (sumTheta(Theta1) + sumTheta(Theta2));
 
+J = J + reg;
 
+% -----------------------back-propagation--------------------------------------
+for t = 1 : m,
+    delta3 = a3(t, :)' - yVectors(t, :)';
 
+    delta2 = ((Theta2' * delta3)(2:end) .* sigmoidGradient(z2)(t, :)');
 
+    if t == 1,
+        % delta and a are vectors , size of Delta ===> length(delta) * length(a) 
+        Delta3 = delta3 * a2(t, :);
+        Delta2 = delta2 * a1(t, :);
+    else,
+        Delta3 = Delta3 + delta3 * a2(t, :);
+        Delta2 = Delta2 + delta2 * a1(t, :);
+    end;
 
+end;
 
+Theta1_grad = (1 / m) * Delta2;
+Theta2_grad = (1 / m) * Delta3;
 
-
-
-
-
-
-% -------------------------------------------------------------
+% -------- Reg. gards -----------------
+Theta1_grad = [Theta1_grad(:, 1), Theta1_grad(:, 2:end) + lambda / m * Theta1(:, 2:end)];
+Theta2_grad = [Theta2_grad(:, 1), Theta2_grad(:, 2:end) + lambda / m * Theta2(:, 2:end)];
 
 % =========================================================================
 
